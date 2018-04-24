@@ -145,15 +145,16 @@ def extract_tfidf_features(column):
 
 if __name__ == '__main__':
     df_train = pd.read_csv('../input/train_clean.csv', encoding='utf-8', dtype=object)
+    df_test = pd.read_csv('../input/test_clean.csv',encoding='utf-8',dtype=object)
     # print(df_train['aid'].value_counts())
     # print(df_train['LBS'].value_counts())
     # print(multicategorical2vector(df_train[multi_categorical_features], column_names=multi_categorical_features))
 
     # extract categorical features
-    # extract_categorical_features(df_train, categorical_features)
+    extract_categorical_features(df_train, categorical_features)
 
     # extract id features
     # extract_id_features(df_train, id_features)
 
     # extract multi-categorical features
-    extract_multicategorical_features(df_train, multi_categorical_features)
+    # extract_multicategorical_features(df_train, multi_categorical_features)
