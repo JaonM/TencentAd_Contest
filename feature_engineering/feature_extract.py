@@ -14,8 +14,10 @@ numeric_features = ['age']
 
 categorical_features = ['gender', 'education', 'consumptionAbility', 'LBS', 'carrier', 'house']
 
-multi_categorical_features = ['marriageStatus', 'interest1', 'interest2', 'interest3', 'interest4', 'interest5',
-                              'kw1', 'kw2', 'kw3', 'topic1', 'topic2', 'topic3', 'creativeId', 'ct', 'os']
+multi_categorical_features = ['marriageStatus', 'creativeId', 'ct', 'os']
+
+tfidf_features = ['interest1', 'interest2', 'interest3', 'interest4', 'interest5', 'kw1', 'kw2', 'kw3', 'topic1',
+                  'topic2', 'topic3']
 
 id_features = ['advertiserId', 'campaignId', 'adCategoryId', 'creativeSize', 'productId', 'productType']
 
@@ -91,15 +93,52 @@ def extract_categorical_features(df_train, categorical_features):
     :param categorical_features: categorical features list
     :return:
     """
+    cat_mat = categorical2vector(df_train[categorical_features], categorical_features)
+    df_cat = pd.DataFrame(data=cat_mat, dtype='int16')
+    df_cat.to_csv('../input/train_categorical_features.csv', index=False, encoding='utf-8')
+
+
+def extract_id_features(df_train, id_features):
+    """
+    use label encoder to encode id features
+    :param df_train:
+    :param id_features:
+    :return:
+    """
+    lb = LabelEncoder()
+    a = np.zeros(shape=(len(df_train), 1))
+    for _id in id_features:
+        column = df_train[_id]
+        column = lb.fit_transform(column).reshape(-1, 1)
+        a = np.concatenate((a, column), axis=1)
+    a = np.delete(a, 0, axis=1)
+    df_id = pd.DataFrame(data=a, dtype='int16')
+    df_id.to_csv('../input/train_id_features.csv', index=False, encoding='utf-8')
+
+
+def extract_multicategorical_features(df_train, multicategorical_features):
+    """
+    use multilabelbinarizer to encode features
+    :param df_train:
+    :param multicategorical_features:
+    :return:
+    """
+    multi_mat = multicategorical2vector(df_train[multicategorical_features], multicategorical_features)
+    df_multi = pd.DataFrame(data=multi_mat, dtype='int16')
+    df_multi.to_csv('../input/train_multi_categorical_features.csv',index=False,encoding='utf-8')
 
 
 if __name__ == '__main__':
     df_train = pd.read_csv('../input/train_clean.csv', encoding='utf-8', dtype=object)
-    print(df_train['interest1'].value_counts())
+    # print(df_train['creativeId'].value_counts())
     # print(df_train['LBS'].value_counts())
     # print(multicategorical2vector(df_train[multi_categorical_features], column_names=multi_categorical_features))
 
     # extract categorical features
-    # cats = categorical2vector(df_train[categorical_features], categorical_features)
-    # df = pd.DataFrame(data=cats, dtype='int32')
-    # df.to_csv('../input/categorical_features.csv', index=False, encoding='utf-8')
+    # extract_categorical_features(df_train, categorical_features)
+
+    # extract id features
+    # extract_id_features(df_train, id_features)
+
+    # extract multi-categorical features
+    extract_multicategorical_features(df_train,multi_categorical_features)
