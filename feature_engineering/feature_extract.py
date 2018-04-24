@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import gc
 import sys
+from scipy import sparse
 
 numeric_features = ['age']
 
@@ -96,7 +97,8 @@ def extract_categorical_features(df_train, categorical_features):
     """
     cat_mat = categorical2vector(df_train[categorical_features], categorical_features)
     df_cat = pd.DataFrame(data=cat_mat, dtype='int8')
-    df_cat.to_csv('../input/train_categorical_features.csv', index=False, encoding='utf-8')
+    # df_cat.to_csv('../input/train_categorical_features.csv', index=False, encoding='utf-8')
+    return df_cat
 
 
 def extract_id_features(df_train, id_features):
@@ -114,7 +116,8 @@ def extract_id_features(df_train, id_features):
         a = np.concatenate((a, column), axis=1)
     a = np.delete(a, 0, axis=1)
     df_id = pd.DataFrame(data=a, dtype='int16')
-    df_id.to_csv('../input/train_id_features.csv', index=False, encoding='utf-8')
+    # df_id.to_csv('../input/train_id_features.csv', index=False, encoding='utf-8')
+    return df_id
 
 
 def extract_multicategorical_features(df_train, multicategorical_features):
@@ -126,35 +129,85 @@ def extract_multicategorical_features(df_train, multicategorical_features):
     """
     multi_mat = multicategorical2vector(df_train[multicategorical_features], multicategorical_features)
     df_multi = pd.DataFrame(data=multi_mat, dtype='int8')
-    df_multi.to_csv('../input/train_multi_categorical_features.csv', index=False, encoding='utf-8')
+    # df_multi.to_csv('../input/train_multi_categorical_features.csv', index=False, encoding='utf-8')
+    return df_multi
 
 
 def extract_tfidf_features(column):
     """
-    extract tfidf features
+    extract tf-idf features global
     :param column:
     :return:
     """
     tfidfVec = TfidfVectorizer(
         ngram_range=(1, 1),
         analyzer='word',
-        min_df=1000
+        min_df=1000,
+        max_features=100
     )
     return tfidfVec.fit_transform(column)
 
 
+def extract_tfidf_features_by_aid(df, column):
+    """
+    extract tf-idf features according to each different aid local tf-idf
+    :param df: data frame
+    :param column: pandas Series
+    :return:
+    """
+    aids = df['aid'].unique()
+    # construct vocabulary
+    # vocabulary = list()
+    # df[column].apply(lambda x: vocabulary.extend(x.split()))
+    # vocabulary = set(vocabulary)
+    # print('vocabulary size is {}'.format(len(vocabulary)))
+    # print(vocabulary)
+    tfidfVec = TfidfVectorizer(
+        ngram_range=(1, 1),
+        analyzer='word',
+        min_df=1000,
+        # vocabulary=vocabulary
+    )
+    tfidf_mat = None
+    for aid in aids:
+        sub_df = df[df['aid'] == aid]
+        print('sub data frame shape is {}'.format(sub_df.shape))
+        tmp = tfidfVec.fit_transform(sub_df[column])
+        print(tmp.shape)
+        if tfidf_mat is None:
+            tfidf_mat = tmp
+        else:
+            if tmp.shape[1] > tfidf_mat.shape[1]:
+                tfidf_mat = sparse.hstack(
+                    (tfidf_mat, np.zeros(shape=(tfidf_mat.shape[0], tmp.shape[1] - tfidf_mat.shape[1]))))
+            elif tmp.shape[1] < tfidf_mat.shape[1]:
+                tmp = sparse.hstack(
+                    (tmp, np.zeros(shape=(tmp.shape[0], tfidf_mat.shape[1] - tmp.shape[1]))))
+            else:
+                pass
+            tfidf_mat = sparse.vstack((tfidf_mat, tmp))
+            print('tfidf matrix shape is {}'.format(tfidf_mat.shape))
+    return tfidf_mat
+
+
 if __name__ == '__main__':
-    df_train = pd.read_csv('../input/train_clean.csv', encoding='utf-8', dtype=object)
-    df_test = pd.read_csv('../input/test_clean.csv',encoding='utf-8',dtype=object)
+    # df_train = pd.read_csv('../input/train_clean.csv', encoding='utf-8', dtype=object)
+    df_test = pd.read_csv('../input/test_clean.csv', encoding='utf-8', dtype=object)
     # print(df_train['aid'].value_counts())
     # print(df_train['LBS'].value_counts())
     # print(multicategorical2vector(df_train[multi_categorical_features], column_names=multi_categorical_features))
 
     # extract categorical features
-    extract_categorical_features(df_train, categorical_features)
+    df = extract_categorical_features(df_test, categorical_features)
+    df.to_csv('../input/test_categorical_features.csv', encoding='utf-8', index=False)
 
     # extract id features
-    # extract_id_features(df_train, id_features)
+    df = extract_id_features(df_test, id_features)
+    df.to_csv('../input/test_id_features.csv', encoding='utf-8', index=False)
 
     # extract multi-categorical features
-    # extract_multicategorical_features(df_train, multi_categorical_features)
+    df = extract_multicategorical_features(df_train, multi_categorical_features)
+    df.to_csv('../input/test_multi_categorical_features.csv', encoding='utf-8', index=False)
+    # mat = extract_tfidf_features_by_aid(df_train, 'interest1')
+    # print(mat)
+    # print(mat.shape)
