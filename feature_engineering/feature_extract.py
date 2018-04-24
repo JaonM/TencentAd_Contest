@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import gc
 import sys
+from scipy import sparse
 
 numeric_features = ['age']
 
@@ -131,16 +132,59 @@ def extract_multicategorical_features(df_train, multicategorical_features):
 
 def extract_tfidf_features(column):
     """
-    extract tfidf features
+    extract tf-idf features global
     :param column:
     :return:
     """
     tfidfVec = TfidfVectorizer(
         ngram_range=(1, 1),
         analyzer='word',
-        min_df=1000
+        min_df=1000,
+        max_features=100
     )
     return tfidfVec.fit_transform(column)
+
+
+def extract_tfidf_features_by_aid(df, column):
+    """
+    extract tf-idf features according to each different aid local tf-idf
+    :param df: data frame
+    :param column: pandas Series
+    :return:
+    """
+    aids = df['aid'].unique()
+    # construct vocabulary
+    # vocabulary = list()
+    # df[column].apply(lambda x: vocabulary.extend(x.split()))
+    # vocabulary = set(vocabulary)
+    # print('vocabulary size is {}'.format(len(vocabulary)))
+    # print(vocabulary)
+    tfidfVec = TfidfVectorizer(
+        ngram_range=(1, 1),
+        analyzer='word',
+        min_df=1000,
+        # vocabulary=vocabulary
+    )
+    tfidf_mat = None
+    for aid in aids:
+        sub_df = df[df['aid'] == aid]
+        print('sub data frame shape is {}'.format(sub_df.shape))
+        tmp = tfidfVec.fit_transform(sub_df[column])
+        print(tmp.shape)
+        if tfidf_mat is None:
+            tfidf_mat = tmp
+        else:
+            if tmp.shape[1] > tfidf_mat.shape[1]:
+                tfidf_mat = sparse.hstack(
+                    (tfidf_mat, np.zeros(shape=(tfidf_mat.shape[0], tmp.shape[1] - tfidf_mat.shape[1]))))
+            elif tmp.shape[1]<tfidf_mat.shape[1]:
+                tmp = sparse.hstack(
+                    (tmp, np.zeros(shape=(tmp.shape[0], tfidf_mat.shape[1] - tmp.shape[1]))))
+            else:
+                pass
+            tfidf_mat = sparse.vstack((tfidf_mat, tmp))
+            print('tfidf matrix shape is {}'.format(tfidf_mat.shape))
+    return tfidf_mat
 
 
 if __name__ == '__main__':
@@ -156,4 +200,8 @@ if __name__ == '__main__':
     # extract_id_features(df_train, id_features)
 
     # extract multi-categorical features
-    extract_multicategorical_features(df_train, multi_categorical_features)
+    # extract_multicategorical_features(df_train, multi_categorical_features)
+
+    mat = extract_tfidf_features_by_aid(df_train, 'interest1')
+    print(mat)
+    print(mat.shape)
