@@ -6,6 +6,7 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import gc
 import sys
@@ -94,7 +95,7 @@ def extract_categorical_features(df_train, categorical_features):
     :return:
     """
     cat_mat = categorical2vector(df_train[categorical_features], categorical_features)
-    df_cat = pd.DataFrame(data=cat_mat, dtype='int16')
+    df_cat = pd.DataFrame(data=cat_mat, dtype='int8')
     df_cat.to_csv('../input/train_categorical_features.csv', index=False, encoding='utf-8')
 
 
@@ -124,13 +125,27 @@ def extract_multicategorical_features(df_train, multicategorical_features):
     :return:
     """
     multi_mat = multicategorical2vector(df_train[multicategorical_features], multicategorical_features)
-    df_multi = pd.DataFrame(data=multi_mat, dtype='int16')
-    df_multi.to_csv('../input/train_multi_categorical_features.csv',index=False,encoding='utf-8')
+    df_multi = pd.DataFrame(data=multi_mat, dtype='int8')
+    df_multi.to_csv('../input/train_multi_categorical_features.csv', index=False, encoding='utf-8')
+
+
+def extract_tfidf_features(column):
+    """
+    extract tfidf features
+    :param column:
+    :return:
+    """
+    tfidfVec = TfidfVectorizer(
+        ngram_range=(1, 1),
+        analyzer='word',
+        min_df=1000
+    )
+    return tfidfVec.fit_transform(column)
 
 
 if __name__ == '__main__':
     df_train = pd.read_csv('../input/train_clean.csv', encoding='utf-8', dtype=object)
-    # print(df_train['creativeId'].value_counts())
+    # print(df_train['aid'].value_counts())
     # print(df_train['LBS'].value_counts())
     # print(multicategorical2vector(df_train[multi_categorical_features], column_names=multi_categorical_features))
 
@@ -141,4 +156,4 @@ if __name__ == '__main__':
     # extract_id_features(df_train, id_features)
 
     # extract multi-categorical features
-    extract_multicategorical_features(df_train,multi_categorical_features)
+    extract_multicategorical_features(df_train, multi_categorical_features)
