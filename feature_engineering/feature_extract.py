@@ -198,15 +198,15 @@ if __name__ == '__main__':
     # print(multicategorical2vector(df_train[multi_categorical_features], column_names=multi_categorical_features))
 
     # extract categorical features
-    df = extract_categorical_features(df_test, categorical_features)
-    df.to_csv('../input/test_categorical_features.csv', encoding='utf-8', index=False)
+    # df = extract_categorical_features(df_test, categorical_features)
+    # df.to_csv('../input/test_categorical_features.csv', encoding='utf-8', index=False)
 
     # extract id features
-    df = extract_id_features(df_test, id_features)
-    df.to_csv('../input/test_id_features.csv', encoding='utf-8', index=False)
+    # df = extract_id_features(df_test, id_features)
+    # df.to_csv('../input/test_id_features.csv', encoding='utf-8', index=False)
 
     # extract multi-categorical features
-    df = extract_multicategorical_features(df_train, multi_categorical_features)
+    df = extract_multicategorical_features(df_test, multi_categorical_features)
     df.to_csv('../input/test_multi_categorical_features.csv', encoding='utf-8', index=False)
     # mat = extract_tfidf_features_by_aid(df_train, 'interest1')
     # print(mat)
