@@ -221,13 +221,13 @@ def extract_probability_features(df, column_name, store_dict=None):
     return store_dict
 
 
-def extract_probability_features_each_aid(column_name=None, df_train=None, df_positive=None, df_statics_origin=None):
+def extract_probability_features_each_aid(df_ad=None, column_name=None, df_train=None, df_positive=None):
     """
     extract each positive probability for each aid of a single column eg. user features
+    :param df_ad:
     :param column_name:
     :param df_train:
     :param df_positive:
-    :param df_statics_origin:
     :return:
     """
     # aid = row[0]
@@ -239,8 +239,8 @@ def extract_probability_features_each_aid(column_name=None, df_train=None, df_po
     #     return 0
     # else:
     #     return positive_count / aid_value_count
-    df_ad = pd.read_csv('../input/adFeature.csv', encoding='utf-8')
     result = []
+    print('start calculating {} statics'.format(column_name))
     for index, item in df_ad.iterrows():
         print(index)
         positive_df = df_positive[df_positive['aid'] == item['aid']]
@@ -249,15 +249,13 @@ def extract_probability_features_each_aid(column_name=None, df_train=None, df_po
         for value in df_train[column_name].unique():
             positive_count = len(positive_df[positive_df[column_name] == value])
             if total == 0:
-                result_dict[column_name + '_' + value] = 0
+                result_dict[value] = 0
             else:
-                result_dict[column_name + '_' + value] = positive_count / total
+                result_dict[value] = positive_count / total
         result.append(result_dict)
-    df_statics = pd.DataFrame(data=result, columns=[column_name + '_' + x for x in df_train[column_name].values])
+    df_statics = pd.DataFrame(data=result, columns=df_train[column_name].unique())
     df_statics['aid'] = df_ad['aid']
-    # df_statics.to_csv('../input/statics' + column_name + '.csv', index=False, encoding='utf-8')
-    if df_statics_origin is not None:
-        df_statics = pd.merge((df_statics, df_statics_origin), axis=1, on='aid', how='inner')
+    df_statics.to_csv('../input/statics/statics_' + column_name + '.csv', index=False, encoding='utf-8')
     return df_statics
 
 
@@ -280,6 +278,11 @@ if __name__ == '__main__':
     # df = extract_multicategorical_features(df_test, multi_categorical_features)
     # df.to_csv('../input/test_multi_categorical_features.csv', encoding='utf-8', index=False)
     # mat = extract_tfidf_features_by_aid(df_train, 'interest1')
-    df_positive = df_train[df_train['label'] == 1]
 
-    extract_probability_features_each_aid(column_name='gender', df_train=df_train, df_positive=df_positive)
+    # build statics features
+    df_ad = pd.read_csv('../input/adFeature.csv', encoding='utf-8')
+    df_positive = df_train[df_train['label'] == 1]
+    df_statics = df_ad[['aid']]
+    for feature in ['gender']:
+        extract_probability_features_each_aid(df_ad=df_ad, column_name=feature, df_train=df_train,
+                                              df_positive=df_positive)
