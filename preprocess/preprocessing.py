@@ -20,6 +20,6 @@ import pandas as pd
 # df_train.sort_values(by='aid', axis=0, inplace=True)
 # df_train.to_csv('../input/train_clean.csv', index=False, encoding='utf-8')
 
-df_test = pd.read_csv('../input/train_clean.csv', encoding='utf-8')
-df_test = df_test[['aid','uid','label']]
-df_test.to_csv('../input/train_small.csv', index=False, encoding='utf-8')
+df_test = pd.read_csv('../input/test.csv', encoding='utf-8')
+df_test.fillna(0,inplace=True)
+df_test.to_csv('../input/test.csv', index=False, encoding='utf-8')
