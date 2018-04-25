@@ -193,7 +193,7 @@ def extract_tfidf_features_by_aid(df, column):
     return tfidf_mat
 
 
-def extract_probability_features(df, column_name, store_dict=None):
+def extract_probability_features(df, column_name, df_ad):
     """
     extract the global positive probability for every single feature eg.uid , ad features...
     :param df:
@@ -201,29 +201,29 @@ def extract_probability_features(df, column_name, store_dict=None):
     :param store_dict
     :return:
     """
-    df_positive = df[df['label'] == 1]
+    df_positive = df[df['label'] == '1']
+    print(len(df_positive))
     column_value_count = df[column_name].value_counts()
-    value_list = []
-    for index, item in df.iterrows():
+    result = []
+    for index, item in df_ad.iterrows():
         print('handing line {}'.format(index))
-        df_positive_column = df_positive[df_positive[column_name] == item[column_name]]
         # total = len(df[df[column_name] == item[column_name]])
-        total = column_value_count[item[column_name]]
-        print(item[column_name] + ' count is {}'.format(total))
-        count = len(df_positive_column)
-        positive_rate = count / total if total != 0 else 0
-        value_list.append(positive_rate)
-    if store_dict is None:
-        store_dict = dict()
-        store_dict[column_name + '_pr'] = value_list
-    else:
-        store_dict[column_name + '_pr'] = value_list
-    return store_dict
+        result_dict = dict()
+        for value in df_train[column_name].unique():
+            positive_count = len(df_positive[df_positive[column_name] == value])
+            total = column_value_count[value]
+            positive_rate = positive_count / total if total != 0 else 0
+            # print(positive_count)
+            result_dict[value] = positive_rate
+        result.append(result_dict)
+    df_statics = pd.DataFrame(data=result, columns=df[column_name].unique(), dtype='float16')
+    df_statics['aid'] = df_ad['aid']
+    df_statics.to_csv('../input/statics/statics_' + column_name + '.csv', encoding='utf-8', index=False)
 
 
 def extract_probability_features_each_aid(df_ad=None, column_name=None, df_train=None, df_positive=None):
     """
-    extract each positive probability for each aid of a single column eg. user features
+    extract each positive probability for each aid of a single-value column eg. user features
     :param df_ad:
     :param column_name:
     :param df_train:
@@ -253,10 +253,21 @@ def extract_probability_features_each_aid(df_ad=None, column_name=None, df_train
             else:
                 result_dict[value] = positive_count / total
         result.append(result_dict)
-    df_statics = pd.DataFrame(data=result, columns=df_train[column_name].unique())
+    df_statics = pd.DataFrame(data=result, columns=df_train[column_name].unique(), dtype='float16')
     df_statics['aid'] = df_ad['aid']
     df_statics.to_csv('../input/statics/statics_' + column_name + '.csv', index=False, encoding='utf-8')
     return df_statics
+
+
+def extract_probability_features_each_aid_multi(df_ad, df_train, column_name):
+    """
+    extract each positive probability for each aid of a multi-value column eg. user features-interest ..topic..
+    :param df_ad:
+    :param df_train:
+    :param column_name:
+    :return:
+    """
+    pass
 
 
 if __name__ == '__main__':
@@ -281,8 +292,9 @@ if __name__ == '__main__':
 
     # build statics features
     df_ad = pd.read_csv('../input/adFeature.csv', encoding='utf-8')
-    df_positive = df_train[df_train['label'] == 1]
-    df_statics = df_ad[['aid']]
-    for feature in ['gender']:
-        extract_probability_features_each_aid(df_ad=df_ad, column_name=feature, df_train=df_train,
-                                              df_positive=df_positive)
+    # df_positive = df_train[df_train['label'] == '1']
+    # df_statics = df_ad[['aid']]
+    # for feature in ['gender']:
+    #     extract_probability_features_each_aid(df_ad=df_ad, column_name=feature, df_train=df_train,
+    #                                           df_positive=df_positive)
+    extract_probability_features(df_train, 'advertiserId', df_ad)
