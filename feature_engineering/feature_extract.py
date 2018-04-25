@@ -11,6 +11,7 @@ import numpy as np
 import gc
 import sys
 from scipy import sparse
+import functools
 
 numeric_features = ['age']
 
@@ -165,7 +166,7 @@ def extract_tfidf_features_by_aid(df, column):
     tfidfVec = TfidfVectorizer(
         ngram_range=(1, 1),
         analyzer='word',
-        min_df=1000,
+        min_df=3000,
         # vocabulary=vocabulary
     )
     tfidf_mat = None
@@ -187,12 +188,82 @@ def extract_tfidf_features_by_aid(df, column):
                 pass
             tfidf_mat = sparse.vstack((tfidf_mat, tmp))
             print('tfidf matrix shape is {}'.format(tfidf_mat.shape))
+        del tmp
+        gc.collect()
     return tfidf_mat
 
 
+def extract_probability_features(df, column_name, store_dict=None):
+    """
+    extract the global positive probability for every single feature eg.uid , ad features...
+    :param df:
+    :param column_name:
+    :param store_dict
+    :return:
+    """
+    df_positive = df[df['label'] == 1]
+    column_value_count = df[column_name].value_counts()
+    value_list = []
+    for index, item in df.iterrows():
+        print('handing line {}'.format(index))
+        df_positive_column = df_positive[df_positive[column_name] == item[column_name]]
+        # total = len(df[df[column_name] == item[column_name]])
+        total = column_value_count[item[column_name]]
+        print(item[column_name] + ' count is {}'.format(total))
+        count = len(df_positive_column)
+        positive_rate = count / total if total != 0 else 0
+        value_list.append(positive_rate)
+    if store_dict is None:
+        store_dict = dict()
+        store_dict[column_name + '_pr'] = value_list
+    else:
+        store_dict[column_name + '_pr'] = value_list
+    return store_dict
+
+
+def extract_probability_features_each_aid(column_name=None, df_train=None, df_positive=None, df_statics_origin=None):
+    """
+    extract each positive probability for each aid of a single column eg. user features
+    :param column_name:
+    :param df_train:
+    :param df_positive:
+    :param df_statics_origin:
+    :return:
+    """
+    # aid = row[0]
+    # positive_df = df_positive[df_positive['aid'] == aid]
+    # positive_count = len(positive_df[positive_df[column_name] == row[target_index]])
+    # aid_value_count = df_train['aid'].value_counts()[row[0]]
+    # print('go go')
+    # if aid_value_count == 0:
+    #     return 0
+    # else:
+    #     return positive_count / aid_value_count
+    df_ad = pd.read_csv('../input/adFeature.csv', encoding='utf-8')
+    result = []
+    for index, item in df_ad.iterrows():
+        print(index)
+        positive_df = df_positive[df_positive['aid'] == item['aid']]
+        total = len(df_train[df_train['aid'] == item['aid']])
+        result_dict = dict()
+        for value in df_train[column_name].unique():
+            positive_count = len(positive_df[positive_df[column_name] == value])
+            if total == 0:
+                result_dict[column_name + '_' + value] = 0
+            else:
+                result_dict[column_name + '_' + value] = positive_count / total
+        result.append(result_dict)
+    df_statics = pd.DataFrame(data=result, columns=[column_name + '_' + x for x in df_train[column_name].values])
+    df_statics['aid'] = df_ad['aid']
+    # df_statics.to_csv('../input/statics' + column_name + '.csv', index=False, encoding='utf-8')
+    if df_statics_origin is not None:
+        df_statics = pd.merge((df_statics, df_statics_origin), axis=1, on='aid', how='inner')
+    return df_statics
+
+
 if __name__ == '__main__':
-    # df_train = pd.read_csv('../input/train_clean.csv', encoding='utf-8', dtype=object)
-    df_test = pd.read_csv('../input/test_clean.csv', encoding='utf-8', dtype=object)
+    df_train = pd.read_csv('../input/train_clean.csv', encoding='utf-8', dtype=object)
+    # df_test = pd.read_csv('../input/test_clean.csv', encoding='utf-8', dtype=object)
     # print(df_train['aid'].value_counts())
     # print(df_train['LBS'].value_counts())
     # print(multicategorical2vector(df_train[multi_categorical_features], column_names=multi_categorical_features))
@@ -206,8 +277,9 @@ if __name__ == '__main__':
     # df.to_csv('../input/test_id_features.csv', encoding='utf-8', index=False)
 
     # extract multi-categorical features
-    df = extract_multicategorical_features(df_test, multi_categorical_features)
-    df.to_csv('../input/test_multi_categorical_features.csv', encoding='utf-8', index=False)
+    # df = extract_multicategorical_features(df_test, multi_categorical_features)
+    # df.to_csv('../input/test_multi_categorical_features.csv', encoding='utf-8', index=False)
     # mat = extract_tfidf_features_by_aid(df_train, 'interest1')
-    # print(mat)
-    # print(mat.shape)
+    df_positive = df_train[df_train['label'] == 1]
+
+    extract_probability_features_each_aid(column_name='gender', df_train=df_train, df_positive=df_positive)
