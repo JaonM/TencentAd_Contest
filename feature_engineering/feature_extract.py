@@ -359,8 +359,10 @@ if __name__ == '__main__':
     #     except Exception as e:
     #         continue
 
-    for feature in ['interest1', 'interest2', 'interest3', 'interest4', 'interest5', 'kw1', 'kw2', 'kw3', 'topic1',
-                    'topic2', 'topic3', 'appIdInstall', 'appIdAction']:
+    # for feature in ['interest1', 'interest2', 'interest3', 'interest4', 'interest5', 'kw1', 'kw2', 'kw3', 'topic1',
+    #                 'topic2', 'topic3', 'appIdInstall', 'appIdAction']:
+    for feature in ['marriageStatus', 'creativeId', 'ct', 'os', 'kw2', 'kw3', 'topic1', 'topic2', 'topic3',
+                    'appIdInstall', 'appIdAction', 'kw1']:
         try:
             extract_probability_features_each_aid_multi(df_ad=df_ad, df_train=df_train, column_name=feature)
         except Exception as e:
