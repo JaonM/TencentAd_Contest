@@ -284,11 +284,12 @@ def extract_probability_features_each_aid_multi(df_ad, df_train, column_name):
                 if value in item[column_name].split():
                     result_dict[value] = result_dict.get(value, 0) + 1
         for value in value_set:
-            result_dict[value] = round(result_dict[value] / total, 8) if total != 0 else 0
+            result_dict[value] = round(result_dict.get(value,0) / total, 8) if total != 0 else 0
             print('{} positive rate is {}'.format(value, result_dict[value]))
         result.append(result_dict)
     df = pd.DataFrame(data=result, columns=list(value_set))
-    df.to_csv('../input/statics/' + column_name + '.csv', index=False, encoding='utf-8')
+    df['aid'] = df_ad['aid']
+    df.to_csv('../input/statics/statics_' + column_name + '.csv', index=False, encoding='utf-8')
 
 
 if __name__ == '__main__':
@@ -314,18 +315,26 @@ if __name__ == '__main__':
     # build statics features
     df_ad = pd.read_csv('../input/adFeature.csv', encoding='utf-8')
     df_positive = df_train[df_train['label'] == '1']
-    df_statics = df_ad[['aid']]
+
     # single value group by aid
-    for feature in ['gender', 'education', 'consumptionAbility', 'LBS', 'carrier', 'house', 'age']:
-        try:
-            extract_probability_features_each_aid(df_ad=df_ad, column_name=feature, df_train=df_train,
-                                                  df_positive=df_positive)
-        except Exception as e:
-            continue
+    # for feature in ['gender', 'education', 'consumptionAbility', 'LBS', 'carrier', 'house', 'age']:
+    #     try:
+    #         extract_probability_features_each_aid(df_ad=df_ad, column_name=feature, df_train=df_train,
+    #                                               df_positive=df_positive)
+    #     except Exception as e:
+    #         continue
 
     # single value
-    for feature in ['advertiserId', 'campaignId', 'adCategoryId', 'creativeSize', 'productId', 'productType']:
+    # for feature in in['advertiserId', 'campaignId', 'adCategoryId', 'creativeSize', 'productId', 'productType']:
+    #     try:
+    #         extract_probability_features(df_train, feature, df_ad)
+    #     except Exception as e:
+    #         continue
+
+    for feature in ['interest1','interest2', 'interest3', 'interest4', 'interest5', 'kw1', 'kw2', 'kw3', 'topic1',
+                  'topic2', 'topic3','appIdInstall', 'appIdAction']:
         try:
-            extract_probability_features(df_train, feature, df_ad)
+            extract_probability_features_each_aid_multi(df_ad=df_ad,df_train=df_train,column_name=feature)
         except Exception as e:
-            continue
+            print(e)
+            # continue
