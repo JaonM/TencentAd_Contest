@@ -212,7 +212,7 @@ def extract_probability_features(df, column_name, df_ad):
         for value in df_train[column_name].unique():
             positive_count = len(df_positive[df_positive[column_name] == value])
             total = column_value_count[value]
-            positive_rate = positive_count / total if total != 0 else 0
+            positive_rate = round(positive_count / total, 8) if total != 0 else 0
             # print(positive_count)
             result_dict[value] = positive_rate
         result.append(result_dict)
@@ -242,16 +242,17 @@ def extract_probability_features_each_aid(df_ad=None, column_name=None, df_train
     result = []
     print('start calculating {} statics'.format(column_name))
     for index, item in df_ad.iterrows():
-        print(index)
-        positive_df = df_positive[df_positive['aid'] == item['aid']]
-        total = len(df_train[df_train['aid'] == item['aid']])
+        print('calculating {}'.format(index))
+        positive_df = df_positive[df_positive['aid'] == str(item['aid'])]
+        total = len(df_train[df_train['aid'] == str(item['aid'])])
         result_dict = dict()
         for value in df_train[column_name].unique():
             positive_count = len(positive_df[positive_df[column_name] == value])
             if total == 0:
                 result_dict[value] = 0
             else:
-                result_dict[value] = positive_count / total
+                result_dict[value] = round(positive_count / total, 8)
+            print('{} positive rate is {}'.format(value, result_dict[value]))
         result.append(result_dict)
     df_statics = pd.DataFrame(data=result, columns=df_train[column_name].unique(), dtype='float16')
     df_statics['aid'] = df_ad['aid']
