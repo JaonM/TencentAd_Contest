@@ -269,7 +269,7 @@ def extract_probability_features_each_aid_multi(df_ad, df_train, column_name):
     :return:
     """
     df_positive = df_train[df_train['label'] == '1']
-    result=[]
+    result = []
     value_list = []
     for value in df_train[column_name].unique():
         value_list.extend(value.split())
@@ -285,10 +285,11 @@ def extract_probability_features_each_aid_multi(df_ad, df_train, column_name):
                     result_dict[value] = result_dict.get(value, 0) + 1
         for value in value_set:
             result_dict[value] = round(result_dict[value] / total, 8) if total != 0 else 0
-            print('{} positive rate is {}'.format(value,result_dict[value]))
+            print('{} positive rate is {}'.format(value, result_dict[value]))
         result.append(result_dict)
-    df = pd.DataFrame(data=result,columns=list(value_set))
-    df.to_csv('../input/statics/'+column_name+'.csv',index=False,encoding='utf-8')
+    df = pd.DataFrame(data=result, columns=list(value_set))
+    df.to_csv('../input/statics/' + column_name + '.csv', index=False, encoding='utf-8')
+
 
 if __name__ == '__main__':
     df_train = pd.read_csv('../input/train_clean.csv', encoding='utf-8', dtype=object)
