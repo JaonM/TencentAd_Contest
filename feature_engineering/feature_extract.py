@@ -284,12 +284,40 @@ def extract_probability_features_each_aid_multi(df_ad, df_train, column_name):
                 if value in item[column_name].split():
                     result_dict[value] = result_dict.get(value, 0) + 1
         for value in value_set:
-            result_dict[value] = round(result_dict.get(value,0) / total, 8) if total != 0 else 0
+            result_dict[value] = round(result_dict.get(value, 0) / total, 8) if total != 0 else 0
             print('{} positive rate is {}'.format(value, result_dict[value]))
         result.append(result_dict)
     df = pd.DataFrame(data=result, columns=list(value_set))
     df['aid'] = df_ad['aid']
     df.to_csv('../input/statics/statics_' + column_name + '.csv', index=False, encoding='utf-8')
+
+
+def extract_max_probability_each_aid_multi(row, df_statics, column_index):
+    """
+    extract the max probability in each multi-value column like max-pooling
+    :param row:
+    :param df_statics:
+    :param column_index:
+    :return:
+    """
+    aid = row[0]  # str
+    column_values = row[column_index].split()
+    df_statics = df_statics[df_statics['aid'] == aid]
+    max_value = df_statics[column_values].max()
+    return max_value
+
+
+def extract_positive_probability_single(row, df_statics, column_value):
+    """
+    extract single-value positive probability in df_statics file
+    :param row:
+    :param df_statics:
+    :param column_value:
+    :return:
+    """
+    aid = row[0]
+    df_statics = df_statics[df_statics['aid'] == aid]
+    return df_statics[column_value]
 
 
 if __name__ == '__main__':
@@ -331,10 +359,10 @@ if __name__ == '__main__':
     #     except Exception as e:
     #         continue
 
-    for feature in ['interest1','interest2', 'interest3', 'interest4', 'interest5', 'kw1', 'kw2', 'kw3', 'topic1',
-                  'topic2', 'topic3','appIdInstall', 'appIdAction']:
+    for feature in ['interest1', 'interest2', 'interest3', 'interest4', 'interest5', 'kw1', 'kw2', 'kw3', 'topic1',
+                    'topic2', 'topic3', 'appIdInstall', 'appIdAction']:
         try:
-            extract_probability_features_each_aid_multi(df_ad=df_ad,df_train=df_train,column_name=feature)
+            extract_probability_features_each_aid_multi(df_ad=df_ad, df_train=df_train, column_name=feature)
         except Exception as e:
             print(e)
             # continue
