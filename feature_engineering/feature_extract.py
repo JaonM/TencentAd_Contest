@@ -292,9 +292,19 @@ if __name__ == '__main__':
 
     # build statics features
     df_ad = pd.read_csv('../input/adFeature.csv', encoding='utf-8')
-    # df_positive = df_train[df_train['label'] == '1']
-    # df_statics = df_ad[['aid']]
-    # for feature in ['gender']:
-    #     extract_probability_features_each_aid(df_ad=df_ad, column_name=feature, df_train=df_train,
-    #                                           df_positive=df_positive)
-    extract_probability_features(df_train, 'advertiserId', df_ad)
+    df_positive = df_train[df_train['label'] == '1']
+    df_statics = df_ad[['aid']]
+    # single value group by aid
+    for feature in ['gender', 'education', 'consumptionAbility', 'LBS', 'carrier', 'house', 'age']:
+        try:
+            extract_probability_features_each_aid(df_ad=df_ad, column_name=feature, df_train=df_train,
+                                                  df_positive=df_positive)
+        except Exception as e:
+            continue
+
+    # single value
+    for feature in ['advertiserId', 'campaignId', 'adCategoryId', 'creativeSize', 'productId', 'productType']:
+        try:
+            extract_probability_features(df_train, feature, df_ad)
+        except Exception as e:
+            continue
