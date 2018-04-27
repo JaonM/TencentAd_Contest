@@ -13,9 +13,7 @@ import sys
 from scipy import sparse
 import functools
 
-numeric_features = ['age']
-
-categorical_features = ['gender', 'education', 'consumptionAbility', 'LBS', 'carrier', 'house']
+categorical_features = ['age', 'gender', 'education', 'consumptionAbility', 'LBS', 'carrier', 'house']
 
 multi_categorical_features = ['marriageStatus', 'creativeId', 'ct', 'os']
 
@@ -143,8 +141,7 @@ def extract_tfidf_features(column):
     tfidfVec = TfidfVectorizer(
         ngram_range=(1, 1),
         analyzer='word',
-        min_df=1000,
-        max_features=100
+        min_df=3000,
     )
     return tfidfVec.fit_transform(column)
 
@@ -198,7 +195,7 @@ def extract_probability_features(df, column_name, df_ad):
     extract the global positive probability for every single feature eg.uid , ad features...
     :param df:
     :param column_name:
-    :param store_dict
+    :param df_ad
     :return:
     """
     df_positive = df[df['label'] == '1']
@@ -209,7 +206,7 @@ def extract_probability_features(df, column_name, df_ad):
         print('handing line {}'.format(index))
         # total = len(df[df[column_name] == item[column_name]])
         result_dict = dict()
-        for value in df_train[column_name].unique():
+        for value in df[column_name].unique():
             positive_count = len(df_positive[df_positive[column_name] == value])
             total = column_value_count[value]
             positive_rate = round(positive_count / total, 8) if total != 0 else 0
@@ -279,10 +276,17 @@ def extract_probability_features_each_aid_multi(df_ad, df_train, column_name):
         positive_df = df_positive[df_positive['aid'] == str(item['aid'])]
         total = len(df_train[df_train['aid'] == str(item['aid'])])
         result_dict = dict()
-        for index, item in positive_df.iterrows():
-            for value in value_set:
-                if value in item[column_name].split():
-                    result_dict[value] = result_dict.get(value, 0) + 1
+
+        value_count = positive_df[column_name].value_counts()
+        for value in value_set:
+            for value_count_index in value_count.index:
+                if value in value_count_index.split():
+                    result_dict[value] = result_dict.get(value, 0) + value_count[value_count_index]
+
+        # for index, item in positive_df.iterrows():
+        #     for value in value_set:
+        #         if value in item[column_name].split():
+        #             result_dict[value] = result_dict.get(value, 0) + 1
         for value in value_set:
             result_dict[value] = round(result_dict.get(value, 0) / total, 8) if total != 0 else 0
             print('{} positive rate is {}'.format(value, result_dict[value]))
@@ -307,17 +311,21 @@ def extract_max_probability_each_aid_multi(row, df_statics, column_index):
     return max_value
 
 
-def extract_positive_probability_single(row, df_statics, column_value):
+def extract_positive_probability_single(row, df_statics, column_index):
     """
     extract single-value positive probability in df_statics file
     :param row:
     :param df_statics:
-    :param column_value:
+    :param column_index:
     :return:
     """
     aid = row[0]
+    column_value = row[column_index]
     df_statics = df_statics[df_statics['aid'] == aid]
-    return df_statics[column_value]
+    try:
+        return df_statics[column_value]
+    except KeyError:
+        return 0
 
 
 if __name__ == '__main__':
@@ -361,8 +369,9 @@ if __name__ == '__main__':
 
     # for feature in ['interest1', 'interest2', 'interest3', 'interest4', 'interest5', 'kw1', 'kw2', 'kw3', 'topic1',
     #                 'topic2', 'topic3', 'appIdInstall', 'appIdAction']:
-    for feature in ['marriageStatus', 'creativeId', 'ct', 'os', 'kw2', 'kw3', 'topic1', 'topic2', 'topic3',
-                    'appIdInstall', 'appIdAction', 'kw1']:
+    # for feature in ['marriageStatus', 'creativeId', 'ct', 'os', 'kw2', 'kw3', 'topic1', 'topic2', 'topic3',
+    #                 'appIdInstall', 'appIdAction', 'kw1']:
+    for feature in ['kw2', 'kw3', 'topic1', 'topic2', 'topic3', 'appIdInstall', 'appIdAction', 'kw1']:
         try:
             extract_probability_features_each_aid_multi(df_ad=df_ad, df_train=df_train, column_name=feature)
         except Exception as e:
