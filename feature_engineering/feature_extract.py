@@ -306,8 +306,10 @@ def extract_max_probability_each_aid_multi(row, df_statics, column_index):
     """
     aid = row[0]  # str
     column_values = row[column_index].split()
-    df_statics = df_statics[df_statics['aid'] == aid]
+    df_statics = df_statics[df_statics['aid'] == int(aid)]
+    # print(df_statics.head())
     max_value = df_statics[column_values].max()
+    print('max value is {}'.format(max_value[0]))
     return max_value
 
 
@@ -321,7 +323,7 @@ def extract_positive_probability_single(row, df_statics, column_index):
     """
     aid = row[0]
     column_value = row[column_index]
-    df_statics = df_statics[df_statics['aid'] == aid]
+    df_statics = df_statics[df_statics['aid'] == int(aid)]
     try:
         return df_statics[column_value]
     except KeyError:

@@ -40,6 +40,7 @@ def build_features_train(train):
         column_index = train.columns.get_loc(feature)
         f = functools.partial(extract_max_probability_each_aid_multi, df_statics=df, column_index=column_index)
         X[feature] = train.apply(f, axis=1, raw=True)
+    X.to_csv('../input/merge/train_multi_categorical.csv',index=False,encoding='utf-8')
     return X, y
 
 
