@@ -35,7 +35,7 @@ def build_features_train(train):
     #     X[feature] = train.apply(f, axis=1, raw=True)
 
     # for feature in multi_categorical_features:
-    for feature in ['ct', 'os']:
+    for feature in ['os']:
         X = pd.DataFrame()
         df = pd.read_csv('../input/statics/statics_' + feature + '.csv', encoding='utf-8')
         column_index = train.columns.get_loc(feature)
