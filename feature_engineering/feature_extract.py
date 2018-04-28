@@ -15,12 +15,12 @@ import functools
 
 categorical_features = ['age', 'gender', 'education', 'consumptionAbility', 'LBS', 'carrier', 'house']
 
-multi_categorical_features = ['marriageStatus', 'creativeId', 'ct', 'os']
+multi_categorical_features = ['marriageStatus', 'ct', 'os']
 
 tfidf_features = ['interest1', 'interest2', 'interest3', 'interest4', 'interest5', 'kw1', 'kw2', 'kw3', 'topic1',
                   'topic2', 'topic3']
 
-id_features = ['advertiserId', 'campaignId', 'adCategoryId', 'creativeSize', 'productId', 'productType']
+id_features = ['creativeId', 'advertiserId', 'campaignId', 'adCategoryId', 'creativeSize', 'productId', 'productType']
 
 user_action_features = ['appIdInstall', 'appIdAction']
 
@@ -310,7 +310,7 @@ def extract_max_probability_each_aid_multi(row, df_statics, column_index):
     # print(df_statics.head())
     max_value = df_statics[column_values].max()
     print('max value is {}'.format(max_value[0]))
-    return max_value
+    return max_value[0]
 
 
 def extract_positive_probability_single(row, df_statics, column_index):
@@ -353,6 +353,7 @@ if __name__ == '__main__':
     # build statics features
     df_ad = pd.read_csv('../input/adFeature.csv', encoding='utf-8')
     df_positive = df_train[df_train['label'] == '1']
+    print(len(df_positive))
 
     # single value group by aid
     # for feature in ['gender', 'education', 'consumptionAbility', 'LBS', 'carrier', 'house', 'age']:
@@ -373,9 +374,9 @@ if __name__ == '__main__':
     #                 'topic2', 'topic3', 'appIdInstall', 'appIdAction']:
     # for feature in ['marriageStatus', 'creativeId', 'ct', 'os', 'kw2', 'kw3', 'topic1', 'topic2', 'topic3',
     #                 'appIdInstall', 'appIdAction', 'kw1']:
-    for feature in ['kw2', 'kw3', 'topic1', 'topic2', 'topic3', 'appIdInstall', 'appIdAction', 'kw1']:
-        try:
-            extract_probability_features_each_aid_multi(df_ad=df_ad, df_train=df_train, column_name=feature)
-        except Exception as e:
-            print(e)
-            # continue
+    # for feature in ['kw2', 'kw3', 'topic1', 'topic2', 'topic3', 'appIdInstall', 'appIdAction', 'kw1']:
+    #     try:
+    #         extract_probability_features_each_aid_multi(df_ad=df_ad, df_train=df_train, column_name=feature)
+    #     except Exception as e:
+    #         print(e)
+    # continue
