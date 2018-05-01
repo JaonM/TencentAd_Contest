@@ -28,22 +28,28 @@ def build_features_train(train):
     y = train['label']
     # building statics features
     print('start building statics features...')
-    # for feature in id_features:
-    #     df = pd.read_csv('../input/statics/statics_' + feature + '.csv', encoding='utf-8')
-    #     column_index = train.columns.get_loc(feature)
-    #     f = functools.partial(extract_positive_probability_single, df_statics=df, column_index=column_index)
-    #     X[feature] = train.apply(f, axis=1, raw=True)
-
-    # for feature in multi_categorical_features:
-    for feature in ['os']:
+    l = ['carrier', 'house', 'creativeId', 'advertiserId', 'campaignId', 'adCategoryId', 'creativeSize', 'productId',
+         'productType']
+    for feature in l:
         X = pd.DataFrame()
         df = pd.read_csv('../input/statics/statics_' + feature + '.csv', encoding='utf-8')
         column_index = train.columns.get_loc(feature)
-        f = functools.partial(extract_max_probability_each_aid_multi, df_statics=df, column_index=column_index)
+        f = functools.partial(extract_positive_probability_single, df_statics=df, column_index=column_index)
         X[feature] = train.apply(f, axis=1, raw=True)
         X['aid'] = train['aid']
         X['uid'] = train['uid']
         X.to_csv('../input/merge/' + feature + '.csv', index=False, encoding='utf-8')
+
+    # for feature in multi_categorical_features:
+    # for feature in ['os']:
+    #     X = pd.DataFrame()
+    #     df = pd.read_csv('../input/statics/statics_' + feature + '.csv', encoding='utf-8')
+    #     column_index = train.columns.get_loc(feature)
+    #     f = functools.partial(extract_max_probability_each_aid_multi, df_statics=df, column_index=column_index)
+    #     X[feature] = train.apply(f, axis=1, raw=True)
+    #     X['aid'] = train['aid']
+    #     X['uid'] = train['uid']
+    #     X.to_csv('../input/merge/' + feature + '.csv', index=False, encoding='utf-8')
     return X, y
 
 

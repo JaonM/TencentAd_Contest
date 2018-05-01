@@ -324,10 +324,13 @@ def extract_positive_probability_single(row, df_statics, column_index):
     aid = row[0]
     column_value = row[column_index]
     df_statics = df_statics[df_statics['aid'] == int(aid)]
-    try:
-        return df_statics[column_value]
-    except KeyError:
-        return 0
+    # try:
+    value = df_statics[str(column_value)].values
+    print('value is {}'.format(value[0]))
+    return value[0]
+    # except KeyError as e:
+    #     print(e)
+    #     return 0
 
 
 if __name__ == '__main__':
