@@ -215,7 +215,8 @@ def extract_probability_features(df, column_name, df_ad):
         result.append(result_dict)
     df_statics = pd.DataFrame(data=result, columns=df[column_name].unique(), dtype='float16')
     df_statics['aid'] = df_ad['aid']
-    df_statics.to_csv('../input/statics/statics_' + column_name + '.csv', encoding='utf-8', index=False)
+    # df_statics.to_csv('../input/statistcs/statics_' + column_name + '.csv', encoding='utf-8', index=False)
+    return df_statistics
 
 
 def extract_probability_features_each_aid(df_ad=None, column_name=None, df_train=None, df_positive=None):
@@ -237,7 +238,7 @@ def extract_probability_features_each_aid(df_ad=None, column_name=None, df_train
     # else:
     #     return positive_count / aid_value_count
     result = []
-    print('start calculating {} statics'.format(column_name))
+    print('start calculating {} statistcs'.format(column_name))
     for index, item in df_ad.iterrows():
         print('calculating {}'.format(index))
         positive_df = df_positive[df_positive['aid'] == str(item['aid'])]
@@ -253,7 +254,7 @@ def extract_probability_features_each_aid(df_ad=None, column_name=None, df_train
         result.append(result_dict)
     df_statics = pd.DataFrame(data=result, columns=df_train[column_name].unique(), dtype='float16')
     df_statics['aid'] = df_ad['aid']
-    df_statics.to_csv('../input/statics/statics_' + column_name + '.csv', index=False, encoding='utf-8')
+    # df_statics.to_csv('../input/statistcs/statics_' + column_name + '.csv', index=False, encoding='utf-8')
     return df_statics
 
 
@@ -293,7 +294,8 @@ def extract_probability_features_each_aid_multi(df_ad, df_train, column_name):
         result.append(result_dict)
     df = pd.DataFrame(data=result, columns=list(value_set))
     df['aid'] = df_ad['aid']
-    df.to_csv('../input/statics/statics_' + column_name + '.csv', index=False, encoding='utf-8')
+    # df.to_csv('../input/statistcs/statics_' + column_name + '.csv', index=False, encoding='utf-8')
+    return df
 
 
 def extract_max_probability_each_aid_multi(row, df_statics, column_index):
@@ -333,53 +335,76 @@ def extract_positive_probability_single(row, df_statics, column_index):
     #     return 0
 
 
+def extract_aid_history_feature(row, df_train, df_positve):
+    """
+    calculate each aid history positive proportion
+    :param row:
+    :param df_train:
+    :param df_positve
+    :return:
+    """
+    aid = row[0]
+    return len(df_positve[df_positve['aid'] == int(aid)]) / len(df_train[df_train[['aid'] == int(aid)]])
+
+
 if __name__ == '__main__':
-    df_train = pd.read_csv('../input/train_clean.csv', encoding='utf-8', dtype=object)
-    # df_test = pd.read_csv('../input/test_clean.csv', encoding='utf-8', dtype=object)
-    # print(df_train['aid'].value_counts())
-    # print(df_train['LBS'].value_counts())
-    # print(multicategorical2vector(df_train[multi_categorical_features], column_names=multi_categorical_features))
+    for i in range(1,2):
+        df_train = pd.read_csv('../input/split_' + str(i) + '/train_split_' + str(i) + '.csv', encoding='utf-8',
+                               dtype=object)
+        # df_test = pd.read_csv('../input/test_clean.csv', encoding='utf-8', dtype=object)
+        # print(df_train['aid'].value_counts())
+        # print(df_train['LBS'].value_counts())
+        # print(multicategorical2vector(df_train[multi_categorical_features], column_names=multi_categorical_features))
 
-    # extract categorical features
-    # df = extract_categorical_features(df_test, categorical_features)
-    # df.to_csv('../input/test_categorical_features.csv', encoding='utf-8', index=False)
+        # extract categorical features
+        df = extract_categorical_features(df_train, categorical_features)
+        df.to_csv('../input/split_' + str(i) + '/vectors/train_split_' + str(i) + '_categorical_features.csv',
+                  encoding='utf-8', index=False)
 
-    # extract id features
-    # df = extract_id_features(df_test, id_features)
-    # df.to_csv('../input/test_id_features.csv', encoding='utf-8', index=False)
+        # extract id features
+        df = extract_id_features(df_train, id_features)
+        df.to_csv('../input/split_' + str(i) + '/vectors/train_split_' + str(i) + '_id_features.csv', encoding='utf-8',
+                  index=False)
 
-    # extract multi-categorical features
-    # df = extract_multicategorical_features(df_test, multi_categorical_features)
-    # df.to_csv('../input/test_multi_categorical_features.csv', encoding='utf-8', index=False)
-    # mat = extract_tfidf_features_by_aid(df_train, 'interest1')
+        # extract multi-categorical features
+        df = extract_multicategorical_features(df_train, multi_categorical_features)
+        df.to_csv('../input/split_' + str(i) + '/vectors/train_split_' + str(i) + '_multi_categorical_features.csv',
+                  encoding='utf-8', index=False)
+        # # mat = extract_tfidf_features_by_aid(df_train, 'interest1')
 
-    # build statics features
-    df_ad = pd.read_csv('../input/adFeature.csv', encoding='utf-8')
-    df_positive = df_train[df_train['label'] == '1']
-    print(len(df_positive))
+        # build statistics features
+        df_ad = pd.read_csv('../input/all/adFeature.csv', encoding='utf-8')
+        df_positive = df_train[df_train['label'] == '1']
+        # print(len(df_positive))
 
-    # single value group by aid
-    # for feature in ['gender', 'education', 'consumptionAbility', 'LBS', 'carrier', 'house', 'age']:
-    #     try:
-    #         extract_probability_features_each_aid(df_ad=df_ad, column_name=feature, df_train=df_train,
-    #                                               df_positive=df_positive)
-    #     except Exception as e:
-    #         continue
+        # # single value group by aid
+        for feature in ['gender', 'education', 'consumptionAbility', 'LBS', 'carrier', 'house', 'age']:
+            try:
+                df_statistics = extract_probability_features_each_aid(df_ad=df_ad, column_name=feature,
+                                                                      df_train=df_train,
+                                                                      df_positive=df_positive)
+                df_statistics.to_csv('../input/split_' + str(i) + '/statistics/statistics_' + feature + '.csv',
+                                     encoding='utf-8', index=False)
+            except Exception as e:
+                continue
 
-    # single value
-    # for feature in in['advertiserId', 'campaignId', 'adCategoryId', 'creativeSize', 'productId', 'productType']:
-    #     try:
-    #         extract_probability_features(df_train, feature, df_ad)
-    #     except Exception as e:
-    #         continue
+        # single value
+        for feature in ['advertiserId', 'campaignId', 'adCategoryId', 'creativeSize', 'productId',
+                        'productType', 'creativeId']:
+            try:
+                df_statistics = extract_probability_features(df_train, feature, df_ad)
+                df_statistics.to_csv('../input/split_' + str(i) + '/statistics/statistics_' + feature + '.csv',
+                                     encoding='utf-8', index=False)
+            except Exception as e:
+                continue
 
-    # for feature in ['interest1', 'interest2', 'interest3', 'interest4', 'interest5', 'kw1', 'kw2', 'kw3', 'topic1',
-    #                 'topic2', 'topic3', 'appIdInstall', 'appIdAction']:
-    # for feature in ['marriageStatus', 'creativeId', 'ct', 'os', 'kw2', 'kw3', 'topic1', 'topic2', 'topic3',
-    #                 'appIdInstall', 'appIdAction', 'kw1']:
-    # for feature in ['kw2', 'kw3', 'topic1', 'topic2', 'topic3', 'appIdInstall', 'appIdAction', 'kw1']:
-    #     try:
-    #         extract_probability_features_each_aid_multi(df_ad=df_ad, df_train=df_train, column_name=feature)
-    #     except Exception as e:
-    #         print(e)
-    # continue
+        for feature in ['marriageStatus' 'ct', 'os', 'interest1', 'interest2', 'interest3', 'interest4',
+                        'interest5', 'kw1', 'kw2', 'kw3', 'topic1', 'topic2', 'topic3', 'appIdInstall', 'appIdAction']:
+            try:
+                df_statistics = extract_probability_features_each_aid_multi(df_ad=df_ad, df_train=df_train,
+                                                                            column_name=feature)
+                df_statistics.to_csv('../input/split_' + str(i) + '/statistics/statistics_' + feature + '.csv',
+                                     encoding='utf-8', index=False)
+            except Exception as e:
+                print(e)
+                continue
