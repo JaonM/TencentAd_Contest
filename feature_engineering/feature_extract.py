@@ -190,31 +190,31 @@ def extract_tfidf_features_by_aid(df, column):
     return tfidf_mat
 
 
-def extract_probability_features(df, column_name, df_ad):
+def extract_probability_features(df, column_name):
     """
     extract the global positive probability for every single feature eg.uid , ad features...
     :param df:
     :param column_name:
-    :param df_ad
     :return:
     """
     df_positive = df[df['label'] == '1']
     print(len(df_positive))
     column_value_count = df[column_name].value_counts()
     result = []
-    for index, item in df_ad.iterrows():
-        print('handing line {}'.format(index))
+    # for index, item in df_ad.iterrows():
+    #     print('handing line {}'.format(index))
         # total = len(df[df[column_name] == item[column_name]])
+    for value in df[column_name].unique():
         result_dict = dict()
-        for value in df[column_name].unique():
-            positive_count = len(df_positive[df_positive[column_name] == value])
-            total = column_value_count[value]
-            positive_rate = round(positive_count / total, 8) if total != 0 else 0
-            # print(positive_count)
-            result_dict[value] = positive_rate
+        positive_count = len(df_positive[df_positive[column_name] == value])
+        total = column_value_count[value]
+        positive_rate = round(positive_count / total, 8) if total != 0 else 0
+        # print(positive_count)
+        result_dict['value'] = int(value)
+        result_dict['probability'] = positive_rate
         result.append(result_dict)
-    df_statics = pd.DataFrame(data=result, columns=df[column_name].unique(), dtype='float16')
-    df_statics['aid'] = df_ad['aid']
+    df_statistics = pd.DataFrame(data=result, columns=['value','probability'])
+    # df_statistics['aid'] = df_ad['aid']
     # df_statics.to_csv('../input/statistcs/statics_' + column_name + '.csv', encoding='utf-8', index=False)
     return df_statistics
 
@@ -323,11 +323,11 @@ def extract_positive_probability_single(row, df_statics, column_index):
     :param column_index:
     :return:
     """
-    aid = row[0]
-    column_value = row[column_index]
-    df_statics = df_statics[df_statics['aid'] == int(aid)]
+    value = row[column_index]
+    # column_value = row[column_index]
+    df_statics = df_statics[df_statics['value'] == value]
     # try:
-    value = df_statics[str(column_value)].values
+    value = df_statics['probability'].values
     print('value is {}'.format(value[0]))
     return value[0]
     # except KeyError as e:
@@ -348,7 +348,9 @@ def extract_aid_history_feature(row, df_train, df_positve):
 
 
 if __name__ == '__main__':
-    for i in range(1,2):
+    # split 6
+    for i in range(5,6):
+        print(i)
         df_train = pd.read_csv('../input/split_' + str(i) + '/train_split_' + str(i) + '.csv', encoding='utf-8',
                                dtype=object)
         # df_test = pd.read_csv('../input/test_clean.csv', encoding='utf-8', dtype=object)
@@ -370,7 +372,7 @@ if __name__ == '__main__':
         df = extract_multicategorical_features(df_train, multi_categorical_features)
         df.to_csv('../input/split_' + str(i) + '/vectors/train_split_' + str(i) + '_multi_categorical_features.csv',
                   encoding='utf-8', index=False)
-        # # mat = extract_tfidf_features_by_aid(df_train, 'interest1')
+        # mat = extract_tfidf_features_by_aid(df_train, 'interest1')
 
         # build statistics features
         df_ad = pd.read_csv('../input/all/adFeature.csv', encoding='utf-8')
@@ -392,7 +394,7 @@ if __name__ == '__main__':
         for feature in ['advertiserId', 'campaignId', 'adCategoryId', 'creativeSize', 'productId',
                         'productType', 'creativeId']:
             try:
-                df_statistics = extract_probability_features(df_train, feature, df_ad)
+                df_statistics = extract_probability_features(df_train, feature)
                 df_statistics.to_csv('../input/split_' + str(i) + '/statistics/statistics_' + feature + '.csv',
                                      encoding='utf-8', index=False)
             except Exception as e:

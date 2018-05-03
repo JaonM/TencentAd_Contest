@@ -6,7 +6,7 @@ use ensemble under-sampling to process data
 import pandas as pd
 import os
 
-df_train = pd.read_csv('../input/all/train_clean.csv', encoding='utf-8')
+df_train = pd.read_csv('../input/split_0/train_split_0.csv', encoding='utf-8')
 
 # df_train_negative = df_train[df_train['label'] == -1]
 # df_train_positive = df_train[df_train['label'] == 1]
@@ -37,4 +37,5 @@ df_train = pd.read_csv('../input/all/train_clean.csv', encoding='utf-8')
 # df.drop_duplicates(inplace=True)
 # print(len(df))
 
-print(df_train['aid'])
+df_positive = df_train[df_train['label'] == '1']
+print(df_positive)
