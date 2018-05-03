@@ -349,7 +349,7 @@ def extract_aid_history_feature(row, df_train, df_positve):
 
 if __name__ == '__main__':
     # split 6
-    for i in range(5,6):
+    for i in range(9,10):
         print(i)
         df_train = pd.read_csv('../input/split_' + str(i) + '/train_split_' + str(i) + '.csv', encoding='utf-8',
                                dtype=object)
