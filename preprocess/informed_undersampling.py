@@ -37,5 +37,5 @@ df_train = pd.read_csv('../input/split_0/train_split_0.csv', encoding='utf-8')
 # df.drop_duplicates(inplace=True)
 # print(len(df))
 
-df_positive = df_train[df_train['label'] == '1']
-print(df_positive)
+# df_positive = df_train[df_train['label'] == '1']
+print(df_train['carrier'].value_counts())
